@@ -13,7 +13,7 @@ Modificado por Silvia Takahashi
 options 
 {
   
-	LOOKAHEAD=3; 
+	LOOKAHEAD=4; 
 	IGNORE_CASE=true;
 	STATIC = false;
 	
@@ -31,6 +31,8 @@ import java.awt.Point;
 import java.io.*;
 import java.util.Vector;
 import java.util.LinkedList;
+import java.util.HashMap;
+import java.util.ArrayList;
 
 @SuppressWarnings("serial")
 public class Robot 
@@ -45,6 +47,8 @@ public class Robot
 	}
 
 	String salida=new String();
+	
+	HashMap<String, Integer> variables = new HashMap<String, Integer>();
 }
 PARSER_END(Robot)
 
@@ -53,7 +57,13 @@ SKIP:
 	" "
 	|	"\r"
 	|	"\t"
-	| "\n"
+	| 	"\n"
+}
+
+TOKEN: /* Definiciones */
+{
+			<DEFV: "defVar">
+		|	<DEFP: "defProc">
 }
 
 TOKEN: /* Nombres de Comandos */
@@ -69,6 +79,13 @@ TOKEN: /* Nombres de Comandos */
 
 }
 
+TOKEN: /* Sintaxis */
+{
+			< OB : "{">
+		|	< CB : "}">
+		|	< SC : ";">
+}
+
 TOKEN:
 {
 		<BALLOONS:  "BALLOONS" >
@@ -77,11 +94,12 @@ TOKEN:
 }
 
 
-
 TOKEN :
 {
 		<NUM: (<DIGIT>)+ >
 		|  	<#DIGIT: ["0"-"9"] >
+		|	<NAME: (<LETTER>)+ >
+		|	<#LETTER: ["a"-"z"] >
         
 }
 
@@ -90,37 +108,69 @@ TOKEN :
 	//boolean command(uniandes.lym.robot.view.Console sistema) :
 	boolean command(Console sistema):
 	{	
-		
-		int x,y;
-		salida=new String();	
+		String salida = "OK";
 	}
-
-	
 	{
-		(		  (
-		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
-		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
-		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
-		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
-		|  <PUT> "("  put() ")"					  			
-		|  <PICK> "(" get()  ")"	
-	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
-		) ";" 
-
+		(defVar() | defProc() | block() | simpleCommand()
 		{
 		    try {
-	    			 Thread.sleep(900);
+	    			 	Thread.sleep(900);
+	    			 	sistema.printOutput(salida);
+						return true;
 	    	    } catch (InterruptedException e) {
-	    			        System.err.format("IOException: %s%n", e);
-	    		    }
-	    			 
-			sistema.printOutput(salida);
-			return true;
-		})+
+	    			System.err.format("IOException: %s%n", e);
+	    		}
+		})
 
     	| <EOF> {return false;} 
 	}
 
+	void defVar() :
+	{
+		Token token;
+		String name;
+		int i;
+	}
+	{
+		<DEFV> token=<NAME> {name = token.image;} i = num() {variables.put(name, i);}
+	}
+	
+	void var() :
+	{Token nombre;}
+	{
+		nombre = <NAME> {variables.keySet().contains(nombre.image);}
+	}
+	
+	void defProc() :
+	{}
+	{
+	 	 <DEFP> <NAME> "(" ( <NAME> ("," <NAME>)* )? ")" block()
+	}
+	
+	void block() :
+	{}
+	{
+		<OB> simpleCommand() (<SC> simpleCommand())* <CB>
+	}
+	
+	void simpleCommand() :
+	{	int x,y;
+		String salida = new String();
+		ArrayList<String> intrucciones = new ArrayList<String>();
+	}
+	{
+		(
+		   	<RIGHT> "(" ")" {world.turnRight(); salida = "Command: Turnright";}
+		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false); salida = "Command: Moveforward ";}  
+		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true); salida = "Command:Jumpforward ";}
+		| 	<GO>  "(" x=num() "," y=num() ")" {world.setPostion(x,y); salida = "Command:GO ";}  
+		|  <PUT> "("  put() ")"					  			
+		|  <PICK> "(" pick()  ")"	
+	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		)
+	}
+	
+	
 	void put() :
 	{
 		int f=1;	
@@ -131,7 +181,7 @@ TOKEN :
 
 	}
 
-	void get() :
+	void pick() :
 	{
 		int f=1;	
 	}
