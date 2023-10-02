@@ -49,6 +49,7 @@ public class Robot
 	String salida=new String();
 	
 	HashMap<String, Integer> variables = new HashMap<String, Integer>();
+	HashMap<String, ArrayList<String>> procs = new HashMap<String, ArrayList<String>>();
 }
 PARSER_END(Robot)
 
@@ -66,16 +67,26 @@ TOKEN: /* Definiciones */
 		|	<DEFP: "defProc">
 }
 
-TOKEN: /* Nombres de Comandos */
+TOKEN: /* simpleCommand */
 {
+			<JMP: "jump">
+		|	<WLK: "walk">
+		|	<LEP:  "leap">
+		| 	<TRN: "turn">
+		| 	<TRNTO: "turnto">
+		| 	<DRP: "drop">
+		|  < GET: "get" >
+		|  <GRB: "grab" >
+        |  <LTGO:  "letGo" >	
+        |	<NOP: "nop">	
 
-			<MOV:  "Mov">
-		| 	<RIGHT: "RIGHT">
-		| 	<PUT: "Put">
-		| 	<PICK: "Pick">
-		|  < POP: "Pop" >
-		|  <GO: "GO" >
-        |  < HOP:  "HOP" >		
+}
+
+TOKEN: /* Direcciones y Cardinales */
+{
+			<O: "north" | "south" | "west" | "east">
+		|	<D: "up" | "down" | "left" | "right">
+
 
 }
 
@@ -135,10 +146,16 @@ TOKEN :
 		<DEFV> token=<NAME> {name = token.image;} i = num() {variables.put(name, i);}
 	}
 	
-	void var() :
-	{Token nombre;}
+	int var() :
+	{Token nombre;
+	int rtn;
+	}
 	{
 		nombre = <NAME> {variables.keySet().contains(nombre.image);}
+		{
+		rtn = variables.get(nombre);
+		return rtn;
+		}
 	}
 	
 	void defProc() :
@@ -155,15 +172,16 @@ TOKEN :
 	
 	void simpleCommand() :
 	{	int x,y;
+		Token d;
 		String salida = new String();
-		ArrayList<String> intrucciones = new ArrayList<String>();
+		ArrayList<String> intrucciones = new ArrayList<String>(); 
 	}
 	{
 		(
-		   	<RIGHT> "(" ")" {world.turnRight(); salida = "Command: Turnright";}
-		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false); salida = "Command: Moveforward ";}  
-		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true); salida = "Command:Jumpforward ";}
-		| 	<GO>  "(" x=num() "," y=num() ")" {world.setPostion(x,y); salida = "Command:GO ";}  
+		   	<JMP> "(" x=(num() | var())  "," y=(num() | var()) ")" {salida = "world.setPostion(" + x + "," + y + ");"}
+		| 	<WLK>  "(" x= (num() | var()) ")" {salida = "world.moveForward(" + x + ",false);"}  
+		| 	<WLK>  "(" x= (num() | var()) "," d = <D> ")" {salida = "world." + d.image + "; world.moveForward(x,false);"}
+		| 	<WLK>  "(" x=num() "," y=num() ")" {world.setPostion(x,y); salida = "Command:GO ";}  
 		|  <PUT> "("  put() ")"					  			
 		|  <PICK> "(" pick()  ")"	
 	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
@@ -218,5 +236,3 @@ TOKEN :
 			return total;
 		}
 	}
-
-	
