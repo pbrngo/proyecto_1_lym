@@ -16,7 +16,7 @@ Pablo Arango - 202220340
 options 
 {
   
-	LOOKAHEAD=1; 
+	LOOKAHEAD=4; 
 	IGNORE_CASE=true;
 	STATIC = false;
 	
