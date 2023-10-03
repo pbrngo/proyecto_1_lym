@@ -6,6 +6,9 @@ Modificado por: Juan Pablo Morales.
 Agregadas producciones para manejar globos
 Modificado por Silvia Takahashi
 
+Proyecto realizado por
+
+Luisa Hernandez - 202114093 - lg.hernandezp1
 
  **/
 
@@ -13,7 +16,7 @@ Modificado por Silvia Takahashi
 options 
 {
   
-	LOOKAHEAD=4; 
+	LOOKAHEAD=1; 
 	IGNORE_CASE=true;
 	STATIC = false;
 	
@@ -40,16 +43,256 @@ public class Robot
 
 
 	private RobotWorldDec world;
-	
+
+	private HashMap<String, Integer> variables = new HashMap<String, Integer>();
+	private HashMap<String, ArrayList> procedimientos = new HashMap<String, ArrayList>();
 	
 	void setWorld(RobotWorld w) {
 		world = (RobotWorldDec) w;	
 	}
 
-	String salida=new String();
+	void movDir(String d, Integer n) throws Exception
+	{
+	  if(d.equals("back"))
+	  {
+	    world.moveVertically(n, false);
+	  }
+	  else if (d.equals("front"))
+	  {
+	    world.moveVertically(-n, false);
+	  }
+	  else if (d.equals("left"))
+	  {
+	    world.moveHorizontally(-n, false);
+	  }
+	  else if (d.equals("right"))
+	  {
+	    world.moveHorizontally(n, false);
+	  }
+	  else
+	  {
+	    throw new Exception("No se encontro la direccion");
+	  }
+	}
+
+	void movOri(Integer o, Integer n) throws Exception
+	{
+	  while (o != world.getFacing())
+	  {
+	    world.turnRight();
+	  }
+
+	  world.moveForward(n, false);
+	}
+
+	void veerTurn(String d)
+	{
+	 if (d.equals("around"))
+	 {
+	   if (world.facingNorth())
+	   {
+	     while (1 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	   else if (world.facingSouth())
+	   {
+	     while (0 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	   else if (world.facingEast())
+	   {
+	     while (3 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	   else
+	   {
+	     while (2 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	 }
+	 else if (d.equals("right"))
+	 {
+	   world.turnRight();
+	 }
+	 else if (d.equals("left"))
+	 {
+	   if (world.facingNorth())
+	   {
+	     while (3 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	   else if (world.facingSouth())
+	   {
+	     while (2 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	   else if (world.facingEast())
+	   {
+	     while (0 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	   else
+	   {
+	     while (1 != world.getFacing())
+	     {
+	       world.turnRight();
+	     }
+	   }
+	 }
+   }
+   
+   void lookTo(Integer o) throws Exception
+	{
+	  while (o != world.getFacing())
+	  {
+	    world.turnRight();
+	  }
+	}
+
+	Boolean isValid(String comando, Integer n) throws Error
+	{
+	  Boolean resultado = true;
+	  if (comando.equals("walk"))
+	  {
+	    try
+	    {
+	      world.moveForward(n, false);
+	      world.moveForward(-n, false);
+	    }
+	    catch(Error e)
+	    {
+	      resultado = false;
+	    }
+	  }
+	  else if(comando.equals("jump"))
+	  {
+	    try
+	    {
+	      world.moveForward(n, true);
+	      world.moveForward(-n, true);
+	    }
+	    catch(Error e)
+	    {
+	      resultado = false;
+	    }
+	  }
+	  else if(comando.equals("pop"))
+	  {
+	    try
+	    {
+	      world.popBalloons(n);
+	      world.putBalloons(n);
+	      Integer r = world.getMyBalloons() + 1;
+	      world.restart(world.getPosition(), r, world.getMyChips(), false);
+	    }
+	    catch(Error e)
+	    {
+	      resultado = false;
+	    }
+	  }
+	  else if (comando.equals("get"))
+	  {
+		  try
+		  {
+		    world.pickChips(n);
+		    world.putChips(n);
+		  }
+		  catch(Error e)
+		  {
+		    resultado = false;
+		  }
+	  }
+	  else if (comando.equals("grab"))
+	  {
+	    try
+	    {
+	      world.grabBalloons(n);
+	      world.putBalloons(n);
+	    }
+	    catch(Error e)
+	    {
+	      resultado = false;
+	    }
+	  }
+	  else if (comando.equals("drop"))
+	  {
+	    try
+	    {
+	      world.putChips(n);
+	      world.pickChips(n);
+	    }
+	    catch(Error e)
+	    {
+	      resultado = false;
+	    }
+	  }
+	  else if (comando.equals("free"))
+	  {
+	    try
+	    {
+	      world.putBalloons(n);
+	      world.grabBalloons(n);
+	    }
+	    catch(Error e)
+	    {
+	      resultado = false;
+	    }
+	  }
+	  else
+	  {
+	    throw new Error ("El comando no existe!");
+	  }
+	  return resultado;
+	}
+
+	boolean canWalkD(String d, Integer n) throws Exception
+	{
+	  boolean resultado = true;
+	  try
+	  {
+	    Point before = world.getPosition();
+	    movDir(d, n);
+	    world.restart(before, world.getMyBalloons(), world.getMyChips(), false);
+	  }
+	  catch(Error e)
+	  {
+	    resultado = false;
+	  }
+	  return resultado;
+	}
+
+	boolean canWalkO(Integer o, Integer n) throws Exception
+	{
+	  boolean resultado = true;
+	  try
+	  {
+	    Point before = world.getPosition();
+	    movOri(o, n);
+	    world.restart(before, world.getMyBalloons(), world.getMyChips(), false);
+	  }
+	  catch(Error e)
+	  {
+	    resultado = false;
+	  }
+	  return resultado;
+	}
+
 	
-	HashMap<String, Integer> variables = new HashMap<String, Integer>();
-	HashMap<String, ArrayList<String>> procs = new HashMap<String, ArrayList<String>>();
+	String salida=new String();
 }
 PARSER_END(Robot)
 
@@ -58,43 +301,50 @@ SKIP:
 	" "
 	|	"\r"
 	|	"\t"
-	| 	"\n"
+	| "\n"
 }
 
-TOKEN: /* Definiciones */
+TOKEN: /* Nombres de Comandos */
 {
-			<DEFV: "defVar">
-		|	<DEFP: "defProc">
-}
 
-TOKEN: /* simpleCommand */
-{
-			<JMP: "jump">
-		|	<WLK: "walk">
-		|	<LEP:  "leap">
-		| 	<TRN: "turn">
-		| 	<TRNTO: "turnto">
-		| 	<DRP: "drop">
-		|  < GET: "get" >
-		|  <GRB: "grab" >
-        |  <LTGO:  "letGo" >	
-        |	<NOP: "nop">	
-
-}
-
-TOKEN: /* Direcciones y Cardinales */
-{
-			<O: "north" | "south" | "west" | "east">
-		|	<D: "up" | "down" | "left" | "right">
-
-
-}
-
-TOKEN: /* Sintaxis */
-{
-			< OB : "{">
-		|	< CB : "}">
-		|	< SC : ";">
+	< PROG : "PROG" >
+| < GORP : "GORP" >
+| < VAR : "VAR" >
+| < PROC : "PROC" >
+| < CORP : "CORP" >
+| < ASSIGN : ":=" >
+| < WALK : "walk" >
+| < JUMP: "jump" >
+| < JUMPTO : "jumpTo" >
+| < VEER : "veer" >
+| < LOOK: "look" >
+| < DROP: "drop" >
+| < GRAB: "grab" >
+| < GET: "get" >
+| < FREE: "free" >
+| < POP: "pop" >
+| < IF: "if" >
+| < ELSE: "else" >
+| < FI : "fi" >
+| < WHILE: "while" >
+| < DO: "do" > 
+| < OD: "od" >
+| < RETIMES: "repeatTimes" >
+| < PER: "per" >
+| < FACING: "isFacing" >
+| < VALID: "isValid" >
+| < CANWALK: "canWalk" >
+| < NOT: "not" >
+| < NORTH: "north" >
+| < SOUTH: "south" >
+| < EAST: "east" >
+| < WEST: "west" >
+| < FRONT: "front" >
+| < LEFT: "left" >
+| < RIGHT: "right" >
+| < BACK: "back">
+| < AROUND: "around" >
+		
 }
 
 TOKEN:
@@ -105,12 +355,469 @@ TOKEN:
 }
 
 
+
+TOKEN :
+{
+		<NUM: (<DIGIT>)+ >
+		| < NAME: ["a"-"z"] (< DIGIT > | < LETTER >)* >
+		|  	<#DIGIT: ["0"-"9"] >
+		| < #LETTER: ["a"-"z"] | ["A"-"Z"]>
+        
+}
+
+//boolean command(uniandes.lym.robot.view.Console sistema) :
+	boolean command(Console sistema) throws Exception:
+	{	
+		
+		int x,y;
+		salida=new String();	
+	}
+
+	
+	{
+		< PROG > (var())+ (defProc())* block(true) < GORP > {salida = "Si sirve el programa"; }
+		{
+		    try {
+	    			 Thread.sleep(900);
+	    	    } catch (InterruptedException e) {
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		}
+
+    	| <EOF> {return false;} 
+	}
+
+void var():
+{
+  String nombreVariable = "";
+}
+{
+  < VAR > (nombreVariable = name()
+  {
+    variables.put(nombreVariable, 0);
+  }
+  ("," nombreVariable = name()
+  {
+    variables.put(nombreVariable, 0);
+  }
+  )*)+ ";"
+}
+
+String name():
+{
+  String nombre;
+}
+{
+  < NAME >
+  {
+    nombre = token.image;
+    return nombre;
+  }
+}
+
+void block(Boolean reproducir) throws Exception:
+{}
+{
+  "{" (comando(reproducir) | controlEstructure(reproducir) )*  "}"
+}
+
+void defProc() throws Exception:
+{
+  String nombreProc;
+  String nombrePara;
+  ArrayList parametros = new ArrayList();
+}
+{
+  < PROC > < NAME > {nombreProc = token.image; } "(" (< NAME > {parametros.add(token.image); variables.put(token.image, 0);} ("," < NAME > {parametros.add(token.image); variables.put(token.image, 0);})*)*  ")" block(false)
+  < CORP > {procedimientos.put(nombreProc, parametros);}
+}
+
+void callProc():
+{
+  ArrayList parametros;
+  Integer par1;
+  Integer par2;
+}
+{
+  parametros = paraProc() "(" (par1 = numOVar() ("," par2 = numOVar() )*)* ")" ";"
+}
+
+
+ArrayList paraProc():
+{
+  String nombreProc;
+  ArrayList parametros = new ArrayList();
+}
+{
+  nombreProc = name()
+  {
+    return procedimientos.get(nombreProc);
+  }
+}
+
+void controlEstructure(Boolean reproducir) throws Exception:
+{
+  Boolean cumple;
+  Integer n;
+}
+{
+  < IF > "(" cumple = condicional() {if(!reproducir) {cumple = false; } } ")" block(cumple) (< ELSE > {if(!reproducir) {cumple = true; } } block(!cumple))* < FI >
+| < WHILE > "(" cumple = condicional() ")" < DO > block(false) < OD >
+| < RETIMES > n = numOVar() block(false) < PER >
+}
+
+Boolean condicional() throws Exception:
+{
+  Boolean resultado = true;
+  Integer o;
+  Integer n;
+  String d;
+  String comando;
+  
+}
+{
+  < FACING > "(" o = orientacion() ")" { resultado = (o.equals(world.getFacing())); return resultado;}
+| < VALID > "("
+	(< WALK >
+	| < JUMP >
+	| < GRAB >
+	| < POP >
+	| < GET >
+	| < FREE >
+	| <  DROP > ) { comando = token.image; } "," n = numOVar() ")" { resultado = isValid(comando, n); return resultado;}
+| < CANWALK > "(" (d = direccion() "," n = numOVar() ")" {resultado = canWalkD(d, n); return resultado;}| o = orientacion() "," n = numOVar() ")" {resultado = canWalkO(o, n); return resultado;} )  
+| < NOT > "(" resultado = condicional() ")" {return !resultado; }
+}
+
+void comando(Boolean reproducir) throws Exception:
+{}
+{
+  (
+    assignment(reproducir)
+| walk(reproducir)
+| jump(reproducir)
+| jumpTo(reproducir)
+| veer(reproducir)
+| look(reproducir)
+| drop(reproducir)
+| grab(reproducir)
+| get(reproducir)
+| free(reproducir)
+| pop(reproducir)) ";"
+}
+
+void pop(Boolean reproducir) throws Exception:
+{
+  Integer n;
+}
+{
+  < POP > "(" n = numOVar() ")" { if (reproducir) {world.popBalloons(n);} }
+}
+
+void free(Boolean reproducir) throws Exception:
+{
+  Integer n;
+}
+{
+  < FREE > "(" n = numOVar() ")" { if (reproducir){world.putBalloons(n);} }
+}
+
+void get(Boolean reproducir) throws Exception:
+{
+  Integer n;
+}
+{
+  < GET > "(" n = numOVar() ")" { if (reproducir) {world.pickChips(n); } }
+}
+
+void grab(Boolean reproducir) throws Exception:
+{
+  Integer n;
+}
+{
+  < GRAB > "(" n = numOVar() ")" { if (reproducir) { world.grabBalloons(n); } }
+}
+
+void drop(Boolean reproducir):
+{
+  Integer n;
+}
+{
+  < DROP > "(" n = numOVar() ")" { if (reproducir) { world.putChips(n);} }
+}
+void look(Boolean reproducir) throws Exception:
+{
+  Integer o;
+}
+{
+  < LOOK > "(" o = orientacion() ")" { if (reproducir){lookTo(o);} }
+}
+
+void veer(Boolean reproducir):
+{
+  String d;
+}
+{
+  < VEER > "(" d = direccion() ")" { if (reproducir) { veerTurn(d); } }
+}
+
+void jumpTo(Boolean reproducir):
+{
+  Integer x;
+  Integer y;
+}
+{
+  < JUMPTO > "(" x = numOVar() "," y = numOVar() ")" {if (reproducir) { world.setPostion(x, y); } }
+}
+void jump(Boolean reproducir):
+{
+  Integer numero;
+}
+{
+  < JUMP > "(" numero = numOVar() ")" {if (reproducir) { world.moveForward(numero, true); }}
+}
+
+
+void assignment(Boolean reproducir) throws Exception:
+{
+  String nombreVar = "";
+  Integer valorAsig;
+}
+{
+  nombreVar = name() < ASSIGN > valorAsig = num()
+  {
+    if (reproducir)
+    { 
+	    if (!variables.containsKey(nombreVar))
+	    {
+	      throw new ParseException("Variable no registrada");
+	    }
+	    else
+	    {
+	      variables.put(nombreVar, valorAsig);
+	    }
+  	}
+  }
+}
+
+void walk(Boolean reproducir) throws Exception:
+{
+  Integer numero;
+  Integer orientacion;
+  String direccion;
+}
+{
+  < WALK > "(" ( (numero = numOVar() { if(reproducir) {world.moveForward(numero, false);} })
+  | direccion = direccion() ","  numero = numOVar(){ if(reproducir) {movDir(direccion, numero);} }
+  | orientacion = orientacion() "," numero = numOVar() { if(reproducir){movOri(orientacion, numero);} }) ")"
+  
+}
+
+
+Integer orientacion():
+{
+  Integer resultado;
+}
+{
+  < SOUTH > { resultado = 1; return resultado;}
+  | < NORTH > { resultado = 0; return resultado;}
+  | < EAST > { resultado = 2; return resultado;}
+  | < WEST > { resultado = 3; return resultado;}
+
+}
+
+String direccion():
+{
+  String resultado;
+}
+{
+  < FRONT > {resultado = token.image; return resultado;}
+  | < RIGHT > {resultado = token.image; return resultado;}
+  | < BACK > {resultado = token.image; return resultado;}
+  | < LEFT > {resultado = token.image; return resultado;}
+  | < AROUND > {resultado = token.image; return resultado;}
+  
+}
+
+int numOVar():
+{	
+	int total=1;
+}
+{
+  <NUM>
+  {
+    try
+    {
+      total = Integer.parseInt(token.image);
+    }
+    catch (NumberFormatException ee)
+    {
+      throw new Error("Number out of bounds: "+token.image+" !!");
+    }
+    return total;
+  }
+  | < NAME >
+  {
+    String nombreVariable = token.image;
+    total = variables.get(nombreVariable);
+    return total;
+  }
+}
+
+int num() throws Error:
+{	
+	int total=1;
+}
+{
+  <NUM>
+  {
+    try 
+	{
+	  total = Integer.parseInt(token.image);
+	}
+	catch (NumberFormatException ee) 
+	{
+	  throw new Error("Number out of bounds: "+token.image+" !!");
+	}
+	return total; }
+}
+
+/*
+//boolean command(uniandes.lym.robot.view.Console sistema) :
+boolean command(Console sistema):
+{}
+{
+  < PROG > (var())+ (proc())* block() < GORP >
+	| <EOF> {return false;} 
+}
+
+
+void var():
+{
+  String nombre;
+}
+{
+  < VAR > (< NAME > ("," < NAME >)?)+ ";"
+}
+
+void proc():
+{}
+{
+  < PROC > < NAME > "(" (param()("," param())?)* ")" block() < COPR >
+}
+
+void block():
+{}
+{
+  "{" ((comand() | control() | procCall()) ";" )+ "}"
+}
+
+void param():
+{}
+{
+  < NUM > | orientacion() | direccion()
+}
+
+void orientacion():
+{}
+{
+  < NORTH >
+ | < SOUTH >
+ | < WEST >
+ | < EAST >
+}
+
+void direccion():
+{}
+{
+  < FRONT >
+| < BACK >
+| < RIGHT >
+| < LEFT >
+}
+
+void comand():
+{}
+{
+  asignamiento()
+  | < WALK > walk()
+  | < JUMP > jump()
+  | < JUMPTO > jumpTo()
+  | < VEER > veer()
+  | < LOOK > look()
+  | <  DROP > drop()
+  | < GRAB > grab()
+  | < GET > get()
+  | < FREE > free()
+  | < POP > pop()
+}
+
+void asignamiento():
+{}
+{
+  < NAME > < ASSIGN > < NUM >
+}
+
+void walk():
+{}
+{
+  "(" (  ) "("
+}
+
+void tipo():
+{}
+{
+  
+}
+
+int num() throws Error:
+{	
+	int total=1;
+}
+{
+  <NUM>
+  {
+	try 
+	{
+	  total = Integer.parseInt(token.image);
+	} 
+	catch (NumberFormatException ee) 
+	{
+	  throw new Error("Number out of bounds: "+token.image+" !!");
+	}
+	return total;
+		}
+	}
+*/
+/*
+TOKEN: /* Nombres de Comandos 
+{
+			<MOV:  "Mov">
+		| 	<RIGHT: "RIGHT">
+		| 	<PUT: "Put">
+		| 	<PICK: "Pick">
+		|  < POP: "Pop" >
+		|  <GO: "GO" >
+        |  < HOP:  "HOP" >		
+
+}
+
+TOKEN:
+{
+		<BALLOONS:  "BALLOONS" >
+		|	<CHIPS:     "CHIPS"  >	
+
+}
+
+
+
 TOKEN :
 {
 		<NUM: (<DIGIT>)+ >
 		|  	<#DIGIT: ["0"-"9"] >
-		|	<NAME: (<LETTER>)+ >
-		|	<#LETTER: ["a"-"z"] >
         
 }
 
@@ -119,76 +826,38 @@ TOKEN :
 	//boolean command(uniandes.lym.robot.view.Console sistema) :
 	boolean command(Console sistema):
 	{	
-		String salida = "OK";
+		
+		int x,y;
+		salida=new String();	
 	}
+
+	
 	{
-		(defVar() | defProc() | block() | simpleCommand()
+		(
+		  (
+		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
+		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
+		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
+		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
+		|  <PUT> "("  put() ")"					  			
+		|  <PICK> "(" get()  ")"	
+	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
+		) ";" 
+
 		{
 		    try {
-	    			 	Thread.sleep(900);
-	    			 	sistema.printOutput(salida);
-						return true;
+	    			 Thread.sleep(900);
 	    	    } catch (InterruptedException e) {
-	    			System.err.format("IOException: %s%n", e);
-	    		}
-		})
+	    			        System.err.format("IOException: %s%n", e);
+	    		    }
+	    			 
+			sistema.printOutput(salida);
+			return true;
+		})+
 
     	| <EOF> {return false;} 
 	}
 
-	void defVar() :
-	{
-		Token token;
-		String name;
-		int i;
-	}
-	{
-		<DEFV> token=<NAME> {name = token.image;} i = num() {variables.put(name, i);}
-	}
-	
-	int var() :
-	{Token nombre;
-	int rtn;
-	}
-	{
-		nombre = <NAME> {variables.keySet().contains(nombre.image);}
-		{
-		rtn = variables.get(nombre);
-		return rtn;
-		}
-	}
-	
-	void defProc() :
-	{}
-	{
-	 	 <DEFP> <NAME> "(" ( <NAME> ("," <NAME>)* )? ")" block()
-	}
-	
-	void block() :
-	{}
-	{
-		<OB> simpleCommand() (<SC> simpleCommand())* <CB>
-	}
-	
-	void simpleCommand() :
-	{	int x,y;
-		Token d;
-		String salida = new String();
-		ArrayList<String> intrucciones = new ArrayList<String>(); 
-	}
-	{
-		(
-		   	<JMP> "(" x=(num() | var())  "," y=(num() | var()) ")" {salida = "world.setPostion(" + x + "," + y + ");"}
-		| 	<WLK>  "(" x= (num() | var()) ")" {salida = "world.moveForward(" + x + ",false);"}  
-		| 	<WLK>  "(" x= (num() | var()) "," d = <D> ")" {salida = "world." + d.image + "; world.moveForward(x,false);"}
-		| 	<WLK>  "(" x=num() "," y=num() ")" {world.setPostion(x,y); salida = "Command:GO ";}  
-		|  <PUT> "("  put() ")"					  			
-		|  <PICK> "(" pick()  ")"	
-	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
-		)
-	}
-	
-	
 	void put() :
 	{
 		int f=1;	
@@ -199,7 +868,7 @@ TOKEN :
 
 	}
 
-	void pick() :
+	void get() :
 	{
 		int f=1;	
 	}
@@ -216,7 +885,7 @@ TOKEN :
 	 * Unsigned decimal number
 	 * @return the corresponding value of the string
 	 * @error  corresponding value is too large
-	 */
+	 
 
 	int num() throws Error:
 	{	
@@ -236,3 +905,5 @@ TOKEN :
 			return total;
 		}
 	}
+
+*/
