@@ -1,4 +1,4 @@
-/*
+*
 Gramatica para el Robot:
 Autor: Alejandro Arango
 Modificado por: Silvia Takahashi
@@ -9,7 +9,6 @@ Modificado por Silvia Takahashi
 Proyecto realizado por
 
 Luisa Hernandez - 202114093 
-Pablo Arango - 202220340
  **/
 
 
@@ -265,18 +264,10 @@ SKIP:
 	| "\n"
 }
 
-TOKEN: /* Nombres de Comandos */
+TOKEN: /* Direcciones y estructuras */
 {
 
-
-			<MOV:  "Mov">
-		| 	<RIGHT: "RIGHT">
-		| 	<PUT: "Put">
-		| 	<PICK: "Pick">
-		|  < POP: "Pop" >
-		|  <GO: "GO" >
-        |  < HOP:  "HOP" >	
-| < IF: "if" >
+ < IF: "if" >
 | < ELSE: "else" >
 | < WHILE: "while" >
 | < RETIMES: "repeatTimes" >
@@ -295,6 +286,13 @@ TOKEN: /* Nombres de Comandos */
 		
 }
 
+TOKEN: /* Nombres de Comandos */
+{
+
+ < GO: "go" >
+| < JUMP: "jump" >
+		
+}
 TOKEN:
 {
 		<BALLOONS:  "BALLOONS" >
@@ -413,8 +411,8 @@ void controlEstructure(Boolean reproducir) throws Exception:
 }
 {
   < IF > "(" cumple = condicional() {if(!reproducir) {cumple = false; } } ")" block(cumple) (< ELSE > {if(!reproducir) {cumple = true; } } block(!cumple))* < FI >
-| < WHILE > "(" cumple = condicional() ")" < DO > block(false) < OD >
-| < RETIMES > n = numOVar() block(false) < PER >
+| < WHILE > "(" cumple = condicional() ")" 
+| < RETIMES > n = numOVar() block(false) 
 }
 
 Boolean condicional() throws Exception:
@@ -451,9 +449,18 @@ void comando(Boolean reproducir) throws Exception:
 | Turn(reproducir)
 | drop(reproducir)
 | grab(reproducir)
-| get(reproducir) ";"
+| get(reproducir)
+| go(reproducir)) ";"
 }
 
+void go(Boolean reproducir) throws Exception:
+{ 
+Integer x, y;
+}
+
+{
+	<GO> "(" x = numOVar() "," y = numOVar() ")" {if (reproducir) { world.setPostion(x, y); } }
+}
 void pop(Boolean reproducir) throws Exception:
 {
   Integer n;
@@ -614,226 +621,3 @@ int num() throws Error:
 	}
 	return total; }
 }
-
-/*
-//boolean command(uniandes.lym.robot.view.Console sistema) :
-boolean command(Console sistema):
-{}
-{
-  < PROG > (var())+ (proc())* block() < GORP >
-	| <EOF> {return false;} 
-}
-
-
-void var():
-{
-  String nombre;
-}
-{
-  < VAR > (< NAME > ("," < NAME >)?)+ ";"
-}
-
-void proc():
-{}
-{
-  < PROC > < NAME > "(" (param()("," param())?)* ")" block() < COPR >
-}
-
-void block():
-{}
-{
-  "{" ((comand() | control() | procCall()) ";" )+ "}"
-}
-
-void param():
-{}
-{
-  < NUM > | orientacion() | direccion()
-}
-
-void orientacion():
-{}
-{
-  < NORTH >
- | < SOUTH >
- | < WEST >
- | < EAST >
-}
-
-void direccion():
-{}
-{
-  < FRONT >
-| < BACK >
-| < RIGHT >
-| < LEFT >
-}
-
-void comand():
-{}
-{
-  asignamiento()
-  | < WALK > Walk()
-  | < JUMP > Jump()
-  | < LEAP > Leap()
-  | < TURNTO > TurnTo()
-  | < TURN > Turn()
-  | <  DROP > drop()
-  | < GRAB > grab()
-  | < GET > get()
- 
-}
-
-void asignamiento():
-{}
-{
-  < NAME > < ASSIGN > < NUM >
-}
-
-void walk():
-{}
-{
-  "(" (  ) "("
-}
-
-void tipo():
-{}
-{
-  
-}
-
-int num() throws Error:
-{	
-	int total=1;
-}
-{
-  <NUM>
-  {
-	try 
-	{
-	  total = Integer.parseInt(token.image);
-	} 
-	catch (NumberFormatException ee) 
-	{
-	  throw new Error("Number out of bounds: "+token.image+" !!");
-	}
-	return total;
-		}
-	}
-*/
-/*
-TOKEN: /* Nombres de Comandos 
-{
-			<MOVE:  "Move">
-		| 	<RIGHT: "RIGHT">
-		| 	<PUT: "Put">
-		| 	<PICK: "Pick">
-		|  < POP: "Pop" >
-		|  <GO: "GO" >
-        |  < HOP:  "HOP" >		
-
-}
-
-TOKEN:
-{
-		<BALLOONS:  "BALLOONS" >
-		|	<CHIPS:     "CHIPS"  >	
-
-}
-
-
-
-TOKEN :
-{
-		<NUM: (<DIGIT>)+ >
-		|  	<#DIGIT: ["0"-"9"] >
-        
-}
-
-
-
-	//boolean command(uniandes.lym.robot.view.Console sistema) :
-	boolean command(Console sistema):
-	{	
-		
-		int x,y;
-		salida=new String();	
-	}
-
-	
-	{
-		(
-		  (
-		   <RIGHT> "(" ")" {world.turnRight();salida = "Command: Turnright";}
-		| 	<MOV>  "(" x=num() ")" {world.moveForward(x,false);salida = "Command: Moveforward ";}  
-		| 	<HOP>  "(" x=num() ")" {world.moveForward(x,true);salida = "Command:Jumpforward ";}
-		| 	<GO>  "(" x=num() "," y=num()")" {world.setPostion(x,y);salida = "Command:GO ";}  
-		|  <PUT> "("  put() ")"					  			
-		|  <PICK> "(" get()  ")"	
-	    |  < POP > "(" x=num() ")" {world.popBalloons(x); salida = "Comando:  Pop";}
-		) ";" 
-
-		{
-		    try {
-	    			 Thread.sleep(900);
-	    	    } catch (InterruptedException e) {
-	    			        System.err.format("IOException: %s%n", e);
-	    		    }
-	    			 
-			sistema.printOutput(salida);
-			return true;
-		})+
-
-    	| <EOF> {return false;} 
-	}
-
-	void put() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>    "," f=num() {world.putChips(f); salida = "Command:  Put Chips"; })
-		|  	  ( <BALLOONS>   "," f=num() {world.putBalloons(f); salida = "Command:  Put Balloons";})	 
-
-	}
-
-	void get() :
-	{
-		int f=1;	
-	}
-	{
-		( <CHIPS>   "," f=num() {world.pickChips(f);salida = "Command:  Pick chips";})
-		|  	  ( <BALLOONS>   "," f=num() {world.grabBalloons(f);salida="Command:  Pick balloons";})	 
-
-	}
-
-	
-	
-
-	/**
-	 * Unsigned decimal number
-	 * @return the corresponding value of the string
-	 * @error  corresponding value is too large
-	 
-
-	int num() throws Error:
-	{	
-		int total=1;
-	}
-	{
-		<NUM>
-		{
-			try 
-			{
-				total = Integer.parseInt(token.image);
-			} 
-			catch (NumberFormatException ee) 
-			{
-				throw new Error("Number out of bounds: "+token.image+" !!");
-			}
-			return total;
-		}
-	}
-
-*/
-	
