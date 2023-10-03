@@ -8,8 +8,8 @@ Modificado por Silvia Takahashi
 
 Proyecto realizado por
 
-Luisa Hernandez - 202114093 - lg.hernandezp1
-
+Luisa Hernandez - 202114093 
+Pablo Arango - 202220340
  **/
 
 
@@ -51,7 +51,7 @@ public class Robot
 		world = (RobotWorldDec) w;	
 	}
 
-	void movDir(String d, Integer n) throws Exception
+	void Move(Integer n,String d) throws Exception
 	{
 	  if(d.equals("back"))
 	  {
@@ -75,17 +75,7 @@ public class Robot
 	  }
 	}
 
-	void movOri(Integer o, Integer n) throws Exception
-	{
-	  while (o != world.getFacing())
-	  {
-	    world.turnRight();
-	  }
-
-	  world.moveForward(n, false);
-	}
-
-	void veerTurn(String d)
+	void Turn(String d)
 	{
 	 if (d.equals("around"))
 	 {
@@ -155,7 +145,7 @@ public class Robot
 	 }
    }
    
-   void lookTo(Integer o) throws Exception
+   void TurnTo(Integer o) throws Exception
 	{
 	  while (o != world.getFacing())
 	  {
@@ -163,7 +153,7 @@ public class Robot
 	  }
 	}
 
-	Boolean isValid(String comando, Integer n) throws Error
+	Boolean Can(String comando) throws Error
 	{
 	  Boolean resultado = true;
 	  if (comando.equals("walk"))
@@ -204,7 +194,7 @@ public class Robot
 	      resultado = false;
 	    }
 	  }
-	  else if (comando.equals("get"))
+	  else if (comando.equals("pick"))
 	  {
 		  try
 		  {
@@ -216,7 +206,7 @@ public class Robot
 		    resultado = false;
 		  }
 	  }
-	  else if (comando.equals("grab"))
+	  else if (comando.equals("pick"))
 	  {
 	    try
 	    {
@@ -228,24 +218,12 @@ public class Robot
 	      resultado = false;
 	    }
 	  }
-	  else if (comando.equals("drop"))
+	  else if (comando.equals("put"))
 	  {
 	    try
 	    {
 	      world.putChips(n);
 	      world.pickChips(n);
-	    }
-	    catch(Error e)
-	    {
-	      resultado = false;
-	    }
-	  }
-	  else if (comando.equals("free"))
-	  {
-	    try
-	    {
-	      world.putBalloons(n);
-	      world.grabBalloons(n);
 	    }
 	    catch(Error e)
 	    {
@@ -259,13 +237,13 @@ public class Robot
 	  return resultado;
 	}
 
-	boolean canWalkD(String d, Integer n) throws Exception
+	boolean Can(String d) throws Exception
 	{
 	  boolean resultado = true;
 	  try
 	  {
 	    Point before = world.getPosition();
-	    movDir(d, n);
+	    Walk(d, n);
 	    world.restart(before, world.getMyBalloons(), world.getMyChips(), false);
 	  }
 	  catch(Error e)
@@ -274,23 +252,6 @@ public class Robot
 	  }
 	  return resultado;
 	}
-
-	boolean canWalkO(Integer o, Integer n) throws Exception
-	{
-	  boolean resultado = true;
-	  try
-	  {
-	    Point before = world.getPosition();
-	    movOri(o, n);
-	    world.restart(before, world.getMyBalloons(), world.getMyChips(), false);
-	  }
-	  catch(Error e)
-	  {
-	    resultado = false;
-	  }
-	  return resultado;
-	}
-
 	
 	String salida=new String();
 }
@@ -307,33 +268,20 @@ SKIP:
 TOKEN: /* Nombres de Comandos */
 {
 
-	< PROG : "PROG" >
-| < GORP : "GORP" >
-| < VAR : "VAR" >
-| < PROC : "PROC" >
-| < CORP : "CORP" >
-| < ASSIGN : ":=" >
-| < WALK : "walk" >
-| < JUMP: "jump" >
-| < JUMPTO : "jumpTo" >
-| < VEER : "veer" >
-| < LOOK: "look" >
-| < DROP: "drop" >
-| < GRAB: "grab" >
-| < GET: "get" >
-| < FREE: "free" >
-| < POP: "pop" >
+
+			<MOV:  "Mov">
+		| 	<RIGHT: "RIGHT">
+		| 	<PUT: "Put">
+		| 	<PICK: "Pick">
+		|  < POP: "Pop" >
+		|  <GO: "GO" >
+        |  < HOP:  "HOP" >	
 | < IF: "if" >
 | < ELSE: "else" >
-| < FI : "fi" >
 | < WHILE: "while" >
-| < DO: "do" > 
-| < OD: "od" >
 | < RETIMES: "repeatTimes" >
-| < PER: "per" >
 | < FACING: "isFacing" >
-| < VALID: "isValid" >
-| < CANWALK: "canWalk" >
+| < CAN: "can" >
 | < NOT: "not" >
 | < NORTH: "north" >
 | < SOUTH: "south" >
@@ -483,12 +431,11 @@ Boolean condicional() throws Exception:
 | < VALID > "("
 	(< WALK >
 	| < JUMP >
-	| < GRAB >
 	| < POP >
 	| < GET >
-	| < FREE >
+	| < GRAB >
 	| <  DROP > ) { comando = token.image; } "," n = numOVar() ")" { resultado = isValid(comando, n); return resultado;}
-| < CANWALK > "(" (d = direccion() "," n = numOVar() ")" {resultado = canWalkD(d, n); return resultado;}| o = orientacion() "," n = numOVar() ")" {resultado = canWalkO(o, n); return resultado;} )  
+| < CAN > "(" (d = direccion() "," n = numOVar() ")" {resultado = canD(d, n); return resultado;}| o = orientacion() "," n = numOVar() ")" {resultado = CanO(o, n); return resultado;} )  
 | < NOT > "(" resultado = condicional() ")" {return !resultado; }
 }
 
@@ -499,36 +446,19 @@ void comando(Boolean reproducir) throws Exception:
     assignment(reproducir)
 | walk(reproducir)
 | jump(reproducir)
-| jumpTo(reproducir)
-| veer(reproducir)
-| look(reproducir)
+| Leap(reproducir)
+| TurnTo(reproducir)
+| Turn(reproducir)
 | drop(reproducir)
 | grab(reproducir)
-| get(reproducir)
-| free(reproducir)
-| pop(reproducir)) ";"
+| get(reproducir) ";"
 }
 
 void pop(Boolean reproducir) throws Exception:
 {
   Integer n;
 }
-{
-  < POP > "(" n = numOVar() ")" { if (reproducir) {world.popBalloons(n);} }
-}
 
-void free(Boolean reproducir) throws Exception:
-{
-  Integer n;
-}
-{
-  < FREE > "(" n = numOVar() ")" { if (reproducir){world.putBalloons(n);} }
-}
-
-void get(Boolean reproducir) throws Exception:
-{
-  Integer n;
-}
 {
   < GET > "(" n = numOVar() ")" { if (reproducir) {world.pickChips(n); } }
 }
@@ -548,29 +478,29 @@ void drop(Boolean reproducir):
 {
   < DROP > "(" n = numOVar() ")" { if (reproducir) { world.putChips(n);} }
 }
-void look(Boolean reproducir) throws Exception:
+void Turn(Boolean reproducir) throws Exception:
 {
   Integer o;
 }
 {
-  < LOOK > "(" o = orientacion() ")" { if (reproducir){lookTo(o);} }
+  < TURN > "(" o = orientacion() ")" { if (reproducir){lookTo(o);} }
 }
 
-void veer(Boolean reproducir):
+void TurnTo(Boolean reproducir):
 {
   String d;
 }
 {
-  < VEER > "(" d = direccion() ")" { if (reproducir) { veerTurn(d); } }
+  < TURNTO > "(" d = direccion() ")" { if (reproducir) { veerTurn(d); } }
 }
 
-void jumpTo(Boolean reproducir):
+void Leap(Boolean reproducir):
 {
   Integer x;
   Integer y;
 }
 {
-  < JUMPTO > "(" x = numOVar() "," y = numOVar() ")" {if (reproducir) { world.setPostion(x, y); } }
+  < LEAP > "(" x = numOVar() "," y = numOVar() ")" {if (reproducir) { world.setPostion(x, y); } }
 }
 void jump(Boolean reproducir):
 {
@@ -743,16 +673,15 @@ void comand():
 {}
 {
   asignamiento()
-  | < WALK > walk()
-  | < JUMP > jump()
-  | < JUMPTO > jumpTo()
-  | < VEER > veer()
-  | < LOOK > look()
+  | < WALK > Walk()
+  | < JUMP > Jump()
+  | < LEAP > Leap()
+  | < TURNTO > TurnTo()
+  | < TURN > Turn()
   | <  DROP > drop()
   | < GRAB > grab()
   | < GET > get()
-  | < FREE > free()
-  | < POP > pop()
+ 
 }
 
 void asignamiento():
@@ -795,7 +724,7 @@ int num() throws Error:
 /*
 TOKEN: /* Nombres de Comandos 
 {
-			<MOV:  "Mov">
+			<MOVE:  "Move">
 		| 	<RIGHT: "RIGHT">
 		| 	<PUT: "Put">
 		| 	<PICK: "Pick">
@@ -907,3 +836,4 @@ TOKEN :
 	}
 
 */
+	
